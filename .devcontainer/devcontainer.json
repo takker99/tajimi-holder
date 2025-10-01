@@ -1,0 +1,19 @@
+{
+  "name": "OpenSCAD Devcontainer",
+  "image": "openscad/openscad:dev.2025-09-29",
+  "postCreateCommand": "bash ./.devcontainer/post-create.sh",
+  "features": {
+    "ghcr.io/devcontainers/features/git:1": {},
+    "ghcr.io/devcontainers/features/common-utils:2": {}
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-azuretools.vscode-containers"
+      ],
+      "settings": {
+        "terminal.integrated.shell.linux": "/bin/bash"
+      }
+    }
+  }
+}
