@@ -9,6 +9,7 @@
 
 include <BOSL2/std.scad>
 include <BOSL2/screws.scad>
+include <BOSL2/walls.scad>
 include <prc03-21a10-7f_cutout.scad> // For connector_cutout module
 
 // --- Design Parameters ---
@@ -73,6 +74,35 @@ terminal_x_offset = 14.4;  // Distance from PCB edge (mm)
 // --- Chamfer ---
 chamfer_size = 3;          // 3mm x 3mm 45-degree chamfer
 
+include <gridfinity-rebuilt-openscad/src/core/standard.scad>
+use <gridfinity-rebuilt-openscad/src/core/gridfinity-rebuilt-holes.scad>
+use <gridfinity-rebuilt-openscad/src/core/base.scad>
+
+// ===== PARAMETERS ===== //
+
+/* [Setup Parameters] */
+$fa = 8;
+$fs = 0.25;
+
+/* [Base Hole Options] */
+//Use gridfinity refined hole style. Not compatible with magnet_holes!
+refined_holes = false;
+// Base will have holes for 6mm Diameter x 2mm high magnets.
+magnet_holes = true;
+// Base will have holes for M3 screws.
+screw_holes = true;
+// Magnet holes will have crush ribs to hold the magnet.
+crush_ribs = true;
+// Magnet/Screw holes will have a chamfer to ease insertion.
+chamfer_holes = true;
+// Magnet/Screw holes will be printed so supports are not needed.
+printable_hole_top = true;
+
+hole_options = bundle_hole_options(refined_holes, magnet_holes, screw_holes, crush_ribs, chamfer_holes, printable_hole_top);
+
+// ===== IMPLEMENTATION ===== //
+
+
 // --- PCB Mounting Post Module ---
 module pcb_mounting_post(height=pcb_clearance, hole_depth=6) {
     diff("pcb_post") {
@@ -92,8 +122,14 @@ module enclosure_body() {
 
                 // Left wall (-X side) attached to bottom's LEFT+TOP edge
                 position(LEFT+TOP)
-                    cuboid([wall_thickness, external_depth, external_height],
-                           anchor=BOTTOM+LEFT);
+                    diff("prc03_cutouts_left") {
+                        cuboid([wall_thickness, external_depth, external_height], anchor=BOTTOM+LEFT)
+                        // PRC03-21A10-7F connector cutouts on +X face
+                        tag("prc03_cutouts_left") position(LEFT) {
+                          back(connector_flange_size)
+                          grid_copies(spacing=connector_gap + connector_flange_size, n=[2,1], axes="yz") yrot(90) connector_cutout(wall_thickness * 1.1);
+                        }
+                    }
 
                 // Right wall (+X side) attached to bottom's RIGHT+TOP edge
                 position(RIGHT+TOP)
@@ -133,7 +169,7 @@ module enclosure_body() {
 
                 position(TOP+FRONT+LEFT)
                   translate([wall_thickness, wall_thickness, 0])
-                  cuboid([pcb_width, pcb_depth, pcb_thickness], anchor=TOP+FRONT+LEFT)
+                  cuboid([pcb_width, pcb_depth, 0], anchor=TOP+FRONT+LEFT) // 位置合わせ用
 
                 // PCB mounting posts attached to the bottom's TOP surface
                 // position(TOP) makes z=0 be the top surface; translate X/Y from center
@@ -143,6 +179,11 @@ module enclosure_body() {
                             pcb_mounting_post();
                     }
                 }
+
+                position(BOTTOM)
+                  down(7)
+                  gridfinityBase(grid_size = [3, 3], hole_options = hole_options);
+
             }
         }
 
@@ -193,6 +234,7 @@ module enclosure_lid() {
         }
     }
 }
+
 
 // --- Assembly ---
 render()
