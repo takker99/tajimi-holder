@@ -9,6 +9,7 @@
 
 include <BOSL2/std.scad>
 include <BOSL2/screws.scad>
+include <prc03-21a10-7f_cutout.scad> // For connector_cutout module
 
 // --- 主要パラメータ (Customize your bracket here) ---
 
@@ -24,41 +25,8 @@ rib_thickness = 2; // リブの厚み
 // リブがコネクタに干渉しないように、中心からの距離を調整 (フランジ21mm角なので > 10.5)
 rib_spacing = rib_thickness + 22;
 
-// --- コネクタの固定寸法 (変更不要) ---
-flange_size = 21.0;
-flange_thickness = 1.5;
-center_hole_dia = 15.3;
-mounting_hole_square_size = 16.0;
-tolerance = 0.2; // 勘合のきつさを調整する公差
-
 
 // --- モジュール定義 ---
-
-// コネクタ用の切り欠き形状を生成するモジュール
-// ここでは Z=0 を「壁の表面」とみなし、+Z 方向に食い込む切り欠きを作る
-module connector_cutout() {
-    union() {
-        // 1. フランジ用の四角い窪み（壁表面から奥へ）
-        cuboid(
-            [flange_size + tolerance, flange_size + tolerance, flange_thickness + tolerance],
-            rounding=0.5,
-            edges=["Z"],
-            anchor=BOTTOM
-        );
-
-        // 2. コネクタ本体が通る中央の丸穴（余裕をみて十分な長さ）
-        cylinder(d = center_hole_dia + tolerance, h = thickness*2, anchor=BOTTOM, $fn=100);
-
-        // 3. 4つのM2.6ネジ穴（XYオフセットは translate を使用）
-        let(pos = mounting_hole_square_size/2) {
-            for (p = [[pos, pos], [-pos, pos], [pos, -pos], [-pos, -pos]]) {
-                translate([p[0], p[1], 0])
-                    screw_hole("M2.6", thread = true, l = thickness*2, anchor=BOTTOM);
-            }
-        }
-    }
-}
-
 
 // 直角二等辺三角形のリブ（ガセット）を内側コーナーに配置するモジュール
 // apex(直角頂点)を y=0 の内側コーナー線上、z=thickness 付近に合わせ、
@@ -76,7 +44,7 @@ module rib_gusset(size=rib_size, t=rib_thickness, eps=0.15) {
 
 
 // --- 本体生成 ---
-
+render() // ちらつき防止
 difference() {
     // --- 1. ポジティブ形状 (ブラケットとリブ) ---
     union() {
@@ -100,6 +68,6 @@ difference() {
     // 壁の位置(y=thickness)と高さ中央(z=wall_height/2)へ移動
     translate([0, -thickness, wall_height/2])
         rotate([-90,0,0])
-            connector_cutout();
+            connector_cutout(thickness);
 
 }
