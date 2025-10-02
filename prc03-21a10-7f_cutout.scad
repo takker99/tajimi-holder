@@ -1,3 +1,5 @@
+include <BOSL2/screws.scad>
+
 // --- コネクタの固定寸法 ---
 flange_size = 21.0;
 flange_thickness = 1.5;
