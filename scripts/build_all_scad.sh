@@ -59,7 +59,7 @@ for f in "${files[@]}"; do
     printf '%s\n' "${cmd[@]}"
   else
     printf 'Running: %s\n' "${cmd[*]}"
-    "${cmd[@]}"
+    "${cmd[@]}" || true
   fi
 done
 
